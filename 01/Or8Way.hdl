@@ -1,0 +1,11 @@
+/** 8-way Or: out = (in[0] or in[1] or ... or in[7]) */
+CHIP Or8Way {
+    IN in[8];
+    OUT out;
+
+    PARTS:
+        Or16(a[0..3] = in[0..3], b[0..3] = in[4..7], out[0..1] = out1, out[2..3] = out2);
+        Or16(a[0..1] = out1, b[0..1] = out2, out[0] = out3, out[1] = out4);
+        Or(a = out3, b = out4, out = out);
+        // or just pairwise (binary) or?
+}

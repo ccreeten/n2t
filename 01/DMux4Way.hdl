@@ -1,0 +1,24 @@
+/**
+ * 4-way demultiplexor:
+ * {a, b, c, d} = {in, 0, 0, 0} if sel == 00
+ *                {0, in, 0, 0} if sel == 01
+ *                {0, 0, in, 0} if sel == 10
+ *                {0, 0, 0, in} if sel == 11
+ */
+CHIP DMux4Way {
+    IN in, sel[2];
+    OUT a, b, c, d;
+
+    PARTS:
+        // set 'in' based on lsb only
+        DMux(in = in, sel = sel[0], a = xa, b = xb);
+        DMux(in = in, sel = sel[0], a = xc, b = xd);
+
+        // only if msb is 0 could a or b output 'in'
+        Mux(a = xa, b = false, sel = sel[1], out = a);
+        Mux(a = xb, b = false, sel = sel[1], out = b);
+
+        // only if msb is 1 could c or d output 'in'
+        Mux(a = false, b = xc, sel = sel[1], out = c);
+        Mux(a = false, b = xd, sel = sel[1], out = d);
+}
