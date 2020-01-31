@@ -40,18 +40,20 @@ public final class Compiler {
     private Executable secondPass(final Source source, final Parser parser, final SymbolTable symbolTable) {
         final var instructions = new ArrayList<Instruction>();
         for (final var statement : parser.parse(source)) {
-            if (statement.isA(Address.class)) {
-                final var address = statement.asA(Address.class);
+            if (statement.is(Address.class)) {
+                final var address = statement.as(Address.class);
                 final var instruction = Instruction.a()
                         .withAddress(address.resolve(symbolTable));
+
                 instructions.add(instruction);
             }
-            if (statement.isA(Compute.class)) {
-                final var compute = statement.asA(Compute.class);
+            if (statement.is(Compute.class)) {
+                final var compute = statement.as(Compute.class);
                 final var instruction = Instruction.c()
                         .withDest(compute.dest().map(this::destToBits).orElse(0b000))
                         .withComp(compToBits(compute.comp()))
                         .withJump(compute.jump().map(this::jumpToBits).orElse(0b000));
+
                 instructions.add(instruction);
             }
         }
@@ -101,10 +103,10 @@ public final class Compiler {
             case "M-D" -> 0b1_000111;
             case "D&M" -> 0b1_000000;
             case "D|M" -> 0b1_010101;
-
             case "M+D" -> 0b1_000010;
             case "A+D" -> 0b0_000010;
-
+            case "M|D" -> 0b1_010101;
+            case "M&D" -> 0b1_000000;
             default    -> throw new UnsupportedOperationException("Unknown comp: " + comp);
         };
     }

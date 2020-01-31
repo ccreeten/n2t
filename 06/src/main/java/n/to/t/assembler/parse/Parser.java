@@ -44,25 +44,28 @@ public final class Parser {
     private Statement parse(final int lineNumber, final int instructionAddress, final String line) {
         final var statement = WHITE_SPACE.matcher(line).replaceAll("");
         if (statement.isBlank()) {
-            return new None();
+            return new Empty();
         }
 
         final var comment = COMMENT.matcher(statement);
         if (comment.matches()) {
             return parse(lineNumber, instructionAddress, comment.group("uncommented"));
         }
+
         final var label = LABEL.matcher(statement);
         if (label.matches()) {
             return new Label(lineNumber, label.group("symbol"), instructionAddress);
         }
+
         final var address = ADDRESS.matcher(statement);
         if (address.matches()) {
             return new Address(lineNumber, address.group("symbol"));
         }
+
         final var compute = COMPUTE.matcher(statement);
         if (compute.matches()) {
             return new Compute(lineNumber, compute.group("dest"), compute.group("comp"), compute.group("jump"));
         }
-        throw new UnsupportedOperationException("Could not parse line: " + statement);
+        throw new UnsupportedOperationException("Could not parse line: " + line);
     }
 }

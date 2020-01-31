@@ -10,6 +10,7 @@ public final class Samples {
 
     public static void main(final String... args) throws Exception {
         final var path = "src/main/resources/Pong.asm";
+
         final var compiler = new Compiler();
         final var source = Source.of(Paths.get(path));
         final var executable = compiler.compile(source);

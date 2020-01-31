@@ -24,6 +24,11 @@ public final class Emulator {
     private static final int RAM_DATA_SIZE = 16384;
     private static final int SCREEN_DATA_SIZE = 8192;
     private static final int KEYBOARD_DATA_SIZE = 1;
+    private static final int RAM_SIZE = RAM_DATA_SIZE + SCREEN_DATA_SIZE + KEYBOARD_DATA_SIZE;
+
+    private static final int SCREEN_BASE = 16384;
+    private static final int KEYBOARD_BASE = 24576;
+
     private static final int INSTRUCTIONS_PER_TICK = 1 << 12;
 
     private final JFrame ui;
@@ -44,7 +49,7 @@ public final class Emulator {
 
     private JFrame initUI(final Reset reset, final Keyboard keyboard, final Screen screen) {
         final var ui = new JFrame();
-        ui.setSize(512, 256 + 64);
+        ui.setSize(512, 256 + 128);
         ui.setResizable(false);
         ui.setLayout(new BorderLayout());
         ui.add(screen, CENTER);
@@ -59,7 +64,7 @@ public final class Emulator {
 
     private void reset() {
         reset = true;
-        ram = new int[RAM_DATA_SIZE + SCREEN_DATA_SIZE + KEYBOARD_DATA_SIZE];
+        ram = new int[RAM_SIZE];
         a = 0;
         d = 0;
         pc = 0;
@@ -80,7 +85,7 @@ public final class Emulator {
 
     private void emulate(final int[] rom) throws InterruptedException {
         while (true) {
-            for (int i = 0; i < INSTRUCTIONS_PER_TICK && !reset; i++) {
+            for (var i = 0; i < INSTRUCTIONS_PER_TICK && !reset; i++) {
                 execute(rom[pc++]);
             }
             ui.repaint();
@@ -94,7 +99,7 @@ public final class Emulator {
             return;
         }
 
-        var controls = (instruction >>> 6);
+        final var controls = (instruction >>> 6);
 
         var x = d;
         var y = ((instruction >>> 12) & 1) == 0 ? a : ram[a];
@@ -121,7 +126,7 @@ public final class Emulator {
         }
 
         final var jump = instruction & 0b111;
-        if (jump == 0b111 || ((jump & 0b001) != 0 && out > 0) || ((jump & 0b010) != 0 && out == 0) || ((jump & 0b100) != 0 && out < 0)) {
+        if (((jump & 0b001) != 0 && out > 0) || ((jump & 0b010) != 0 && out == 0) || ((jump & 0b100) != 0 && out < 0)) {
             pc = a;
         }
     }
@@ -146,7 +151,7 @@ public final class Emulator {
 
         private void draw(final int[] ram, final int[] pixels) {
             for (int address = 0; address < SCREEN_DATA_SIZE; address++) {
-                var word = ram[RAM_DATA_SIZE + address];
+                final var word = ram[SCREEN_BASE + address];
                 for (int bit = 0; bit < 16; bit++) {
                     final var pixel = word >>> bit;
                     pixels[address * 16 + bit] = (pixel & 1) == 0 ? WHITE.getRGB() : BLACK.getRGB();
@@ -166,7 +171,7 @@ public final class Emulator {
 
     final class Keyboard implements KeyListener {
 
-        private final int keyboardAddress = Emulator.RAM_DATA_SIZE + Emulator.SCREEN_DATA_SIZE;
+        private final int keyboardAddress = KEYBOARD_BASE;
 
         @Override
         public void keyTyped(final KeyEvent event) {
@@ -177,13 +182,13 @@ public final class Emulator {
             final var code = event.getKeyCode();
             final var key = event.getKeyChar();
             ram[keyboardAddress] = switch (code) {
-                case VK_ENTER -> 128;
+                case VK_ENTER ->      128;
                 case VK_BACK_SPACE -> 129;
-                case VK_LEFT -> 130;
-                case VK_UP -> 131;
-                case VK_RIGHT -> 132;
-                case VK_DOWN -> 133;
-                case VK_ESCAPE -> 140;
+                case VK_LEFT ->       130;
+                case VK_UP ->         131;
+                case VK_RIGHT ->      132;
+                case VK_DOWN ->       133;
+                case VK_ESCAPE ->     140;
                 default -> key; // don't care about 'might not be meaningful'
             };
         }
